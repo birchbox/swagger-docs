@@ -32,11 +32,11 @@ module Swagger
           write_to_file("#{settings[:api_file_path]}/api-docs.json", root, config)
           models = {}
           resources.each do |resource|
-            models = models.merge(resource[:models])  if resource[:models].present?
+            models = models.merge(resource["models"])  if resource["models"].present?
           end
           resources.each do |resource|
             resource_file_path = resource.delete 'resourceFilePath'
-            resource[:models] = models
+            resource["models"] = models
             write_to_file(File.join(settings[:api_file_path], "#{resource_file_path}.json"), resource, config)
           end
           result

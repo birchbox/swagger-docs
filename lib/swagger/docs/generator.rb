@@ -75,7 +75,7 @@ module Swagger
               debased_path = get_debased_path(ret[:path], settings[:controller_base_path])
               resource_api = {
                 path: "#{Config.transform_path(trim_leading_slash(debased_path))}.{format}",
-                description: ret[:klass].swagger_config[:description]
+                description: ret[:klass].swagger_config[:description],
                 count: ret[:apis].length
               }
               root[:apis] << resource_api

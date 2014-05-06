@@ -13,7 +13,9 @@ module Swagger
 
       class << self
 
-        @models = {}
+        def initialize
+          @model = {}
+        end
 
         def set_real_methods
           Config.base_api_controller.send(:include, Methods) # replace impotent methods with live ones

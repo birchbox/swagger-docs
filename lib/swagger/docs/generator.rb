@@ -14,7 +14,7 @@ module Swagger
       class << self
 
         def initialize
-          @models = {}
+          @model = {}
         end
 
         def set_real_methods

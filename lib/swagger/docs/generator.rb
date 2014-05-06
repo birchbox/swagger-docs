@@ -30,8 +30,13 @@ module Swagger
           root = result[:root]
           resources = root.delete 'resources'
           write_to_file("#{settings[:api_file_path]}/api-docs.json", root, config)
+          models = {}
+          resources.each do |resource|
+            models = models.merge(resource[:models])
+          end
           resources.each do |resource|
             resource_file_path = resource.delete 'resourceFilePath'
+            resource[:models] = models
             write_to_file(File.join(settings[:api_file_path], "#{resource_file_path}.json"), resource, config)
           end
           result

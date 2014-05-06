@@ -37,7 +37,9 @@ module Swagger
           resources.each do |resource|
             resource_file_path = resource.delete 'resourceFilePath'
             resource["models"] = models
-            write_to_file(File.join(settings[:api_file_path], "#{resource_file_path}.json"), resource, config)
+            unless resource["apis"].empty?
+              write_to_file(File.join(settings[:api_file_path], "#{resource_file_path}.json"), resource, config)
+            end
           end
           result
         end

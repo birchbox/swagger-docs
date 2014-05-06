@@ -29,7 +29,6 @@ module Swagger
           clean_output_paths(settings[:api_file_path]) if config[:clean_directory] || false
           root = result[:root]
           resources = root.delete 'resources'
-          root["apis"] = root["apis"].select{ |api| api["count"] > 0 }
           write_to_file("#{settings[:api_file_path]}/api-docs.json", root, config)
           models = {}
           resources.each do |resource|
@@ -38,7 +37,9 @@ module Swagger
           resources.each do |resource|
             resource_file_path = resource.delete 'resourceFilePath'
             resource["models"] = models
-            write_to_file(File.join(settings[:api_file_path], "#{resource_file_path}.json"), resource, config)
+            unless resource["apis"].empty?
+              write_to_file(File.join(settings[:api_file_path], "#{resource_file_path}.json"), resource, config)
+            end
           end
           result
         end

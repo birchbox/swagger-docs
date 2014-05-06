@@ -13,6 +13,8 @@ module Swagger
 
       class << self
 
+        @models = {}
+
         def set_real_methods
           Config.base_api_controller.send(:include, Methods) # replace impotent methods with live ones
         end
@@ -32,6 +34,7 @@ module Swagger
           write_to_file("#{settings[:api_file_path]}/api-docs.json", root, config)
           resources.each do |resource|
             resource_file_path = resource.delete 'resourceFilePath'
+            resource[:models] = @models
             write_to_file(File.join(settings[:api_file_path], "#{resource_file_path}.json"), resource, config)
           end
           result
@@ -63,7 +66,7 @@ module Swagger
             ret = process_path(path, root, config, settings)
             results[ret[:action]] << ret
             if ret[:action] == :processed
-              resource = generate_resource(ret[:path], ret[:apis], ret[:models], settings, root, config)
+              resource = generate_resource(ret[:path], ret[:apis], settings, root, config)
               resources << resource
               debased_path = get_debased_path(ret[:path], settings[:controller_base_path])
               resource_api = {
@@ -128,32 +131,30 @@ module Swagger
           klass = "#{path.to_s.camelize}Controller".constantize rescue nil
           return {action: :skipped, path: path, reason: :klass_not_present} if !klass
           return {action: :skipped, path: path, reason: :not_swagger_resource} if !klass.methods.include?(:swagger_config) or !klass.swagger_config[:controller]
-          apis, models = [], {}
+          apis = []
           Config.base_application.routes.routes.select{|i| i.defaults[:controller] == path}.each do |route|
             ret = get_route_path_apis(path, route, klass, settings, config)
             apis = apis + ret[:apis]
-            models.merge!(ret[:models])
           end
-          {action: :processed, path: path, apis: apis, models: models, klass: klass}
+          {action: :processed, path: path, apis: apis, klass: klass}
         end
 
-        def generate_resource(path, apis, models, settings, root, config)
+        def generate_resource(path, apis, settings, root, config)
           debased_path = get_debased_path(path, settings[:controller_base_path])
           demod = "#{debased_path.to_s.camelize}".demodulize.camelize.underscore
           resource_path = trim_leading_slash(debased_path.to_s.underscore)
           resource = root.merge({:resource_path => "#{demod}", :apis => apis})
           camelize_keys_deep!(resource, config)
           # Add the already-normalized models to the resource.
-          resource = resource.merge({:models => models}) if models.present?
           resource[:resource_file_path] = resource_path
           resource
         end
 
         def get_route_path_apis(path, route, klass, settings, config)
-          models, apis = {}, []
+          apis = []
           action = route.defaults[:action]
           verb = route.verb.source.to_s.delete('$'+'^').downcase.to_sym
-          return {apis: apis, models: models} if !operations = klass.swagger_actions[action.to_sym]
+          return {apis: apis} if !operations = klass.swagger_actions[action.to_sym]
           operations = Hash[operations.map {|k, v| [k.to_s.gsub("@","").to_sym, v.respond_to?(:deep_dup) ? v.deep_dup : v.dup] }] # rename :@instance hash keys
           operations[:method] = verb
           operations[:nickname] = "#{path.camelize}##{action}"
@@ -162,13 +163,12 @@ module Swagger
           operations[:parameters] = filter_path_params(api_path, operations[:parameters]) if operations[:parameters]
 
           apis << {:path => api_path, :operations => [operations]}
-          models = get_klass_models(klass)
+          get_klass_models(klass)
 
-          {apis: apis, models: models}
+          {apis: apis}
         end
 
         def get_klass_models(klass)
-          models = {}
           # Add any declared models to the root of the resource.
           klass.swagger_models.each do |model_name, model|
             formatted_model = {
@@ -177,9 +177,8 @@ module Swagger
               properties: model[:properties],
             }
             formatted_model[:description] = model[:description] if model[:description]
-            models[model[:id]] = formatted_model
+            @models[model[:id]] = formatted_model
           end
-          models
         end
 
         def get_settings(api_version, config)

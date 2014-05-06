@@ -72,14 +72,13 @@ module Swagger
             if ret[:action] == :processed
               resource = generate_resource(ret[:path], ret[:apis], ret[:models], settings, root, config)
               resources << resource
-              unless ret[:apis].empty?
-                debased_path = get_debased_path(ret[:path], settings[:controller_base_path])
-                resource_api = {
-                  path: "#{Config.transform_path(trim_leading_slash(debased_path))}.{format}",
-                  description: ret[:klass].swagger_config[:description]
-                }
-                root[:apis] << resource_api
-              end
+              debased_path = get_debased_path(ret[:path], settings[:controller_base_path])
+              resource_api = {
+                path: "#{Config.transform_path(trim_leading_slash(debased_path))}.{format}",
+                description: ret[:klass].swagger_config[:description]
+                count: ret[:apis].length
+              }
+              root[:apis] << resource_api
             end
           end
           root[:resources] = resources

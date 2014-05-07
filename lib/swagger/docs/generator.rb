@@ -47,8 +47,10 @@ module Swagger
           root_path = File.join(Rails.root.join("app", "serializers")
           serializers = Dir[ root_path, '**', '*') ].reject { |p| File.directory? p }.map { |p| p.gsub(root_path.to_s, "").gsub(".rb", "") }
           serializers.each do |serializer|
-            kclass = serializer.classify.constantize
-            models = models.merge(get_klass_models(klass))
+            kclass = serializer.classify.constantize rescue nil
+            unless !kclass  
+              models = models.merge(get_klass_models(klass))
+            end
           end
           models
         end

@@ -49,7 +49,7 @@ module Swagger
           serializers.each do |serializer|
             kclass = serializer.classify.constantize rescue nil
             unless !kclass  
-              models = models.merge(get_klass_models(klass))
+              models = models.merge(get_klass_models(kclass))
             end
           end
           models

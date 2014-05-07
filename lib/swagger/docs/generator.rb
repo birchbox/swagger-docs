@@ -44,8 +44,8 @@ module Swagger
 
         def get_models_from_serializers
           models = {}
-          root_path = File.join(Rails.root.join("app", "serializers")
-          serializers = Dir[ root_path, '**', '*') ].reject { |p| File.directory? p }.map { |p| p.gsub(root_path.to_s, "").gsub(".rb", "") }
+          root_path = Rails.root.join("app", "serializers")
+          serializers = Dir[ File.join(root_path, '**', '*') ].reject { |p| File.directory? p }.map { |p| p.gsub(root_path.to_s, "").gsub(".rb", "") }
           serializers.each do |serializer|
             kclass = serializer.classify.constantize rescue nil
             unless !kclass  

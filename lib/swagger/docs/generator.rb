@@ -30,7 +30,7 @@ module Swagger
           root = result[:root]
           resources = root.delete 'resources'
           write_to_file("#{settings[:api_file_path]}/api-docs.json", root, config)
-          models = {}
+          models = get_models_from_serializers
           resources.each do |resource|
             models = models.merge(resource["models"])  if resource["models"].present?
           end
@@ -40,6 +40,17 @@ module Swagger
             write_to_file(File.join(settings[:api_file_path], "#{resource_file_path}.json"), resource, config)
           end
           result
+        end
+
+        def get_models_from_serializers
+          models = {}
+          root_path = File.join(Rails.root.join("app", "serializers")
+          serializers = Dir[ root_path, '**', '*') ].reject { |p| File.directory? p }.map { |p| p.gsub(root_path.to_s, "").gsub(".rb", "") }
+          serializers.each do |serializer|
+            kclass = serializer.classify.constantize
+            models = models.merge(get_klass_models(klass))
+          end
+          models
         end
 
         def generate_docs(apis=nil)

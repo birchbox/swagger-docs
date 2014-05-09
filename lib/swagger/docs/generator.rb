@@ -30,6 +30,7 @@ module Swagger
           root = result[:root]
           resources = root.delete 'resources'
           write_to_file("#{settings[:api_file_path]}/api-docs.json", root, config)
+          # Fetching models from serializers and controllers and passing them along to all the files.
           models = get_models_from_serializers
           resources.each do |resource|
             models = models.merge(resource["models"])  if resource["models"].present?
